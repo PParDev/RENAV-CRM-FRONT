@@ -1,15 +1,20 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './views/Login.jsx';
 import Layout from './components/Layout.jsx';
 import Dashboard from './views/Dashboard.jsx';
 import Placeholder from './views/Placeholder.jsx';
 import Leads from './views/Leads.jsx';
 
 function App() {
+    // Temporalmente usamos estado local para simular si hay sesión
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<Layout />}>
+                <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
+                <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
                     <Route index element={<Dashboard />} />
                     <Route path="leads" element={<Leads />} />
                     <Route path="contacts" element={<Placeholder title="Contacts" />} />

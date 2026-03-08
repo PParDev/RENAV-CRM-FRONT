@@ -5,6 +5,7 @@ import {
     UserCircle, FileText, CheckSquare, Calendar,
     Phone, Mail, LayoutTemplate, ChevronRight, Bell, Menu
 } from 'lucide-react';
+import LogoDashboard from '../assets/logos/RA__ISOLOGO_BLANCO.png';
 
 const menuItems = [
     { name: 'Dashboard', label: 'Dashboard', to: '/', icon: LayoutDashboard },
@@ -36,7 +37,7 @@ export default function Layout() {
                 {/* Logo / Header */}
                 <div className="flex items-center gap-3 p-4 border-b border-white/10 h-16 flex-shrink-0 bg-[#0A1128]">
                     <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 bg-transparent">
-                        <img src="/logo-renav.png" alt="Renâv Logo" className="w-full h-full object-contain scale-[1.4] mix-blend-lighten" />
+                        <img src={LogoDashboard} alt="Renâv Logo" className="w-full h-full object-contain scale-[1.4] mix-blend-lighten" />
                     </div>
                     {!isSidebarCollapsed && (
                         <div className="flex flex-col">

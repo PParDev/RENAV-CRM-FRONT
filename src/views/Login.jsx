@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import LogoRenav from '../assets/logos/RA__ISOLOGO_BLANCO.png';
+import LogoRenav from '../assets/logos/RA__ISOLOGO_DORADO.png';
 
 const Login = ({ onLogin }) => {
     const [email, setEmail] = useState('');
@@ -120,7 +120,7 @@ const Login = ({ onLogin }) => {
                     <img
                         src={LogoRenav}
                         alt="Renâv Logo"
-                        className="w-64 md:w-80 object-contain drop-shadow-2xl z-10 transition-transform duration-500 hover:scale-105"
+                        className="w-100 md:w-100 object-contain drop-shadow-2xl z-10 transition-transform duration-500 hover:scale-105"
                     />
                 </div>
 

@@ -3,8 +3,10 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Contact, Home, Zap,
     UserCircle, FileText, CheckSquare, Calendar,
-    Phone, Mail, LayoutTemplate, ChevronRight, Bell, Menu
+    Phone, Mail, LayoutTemplate, ChevronRight, Bell, Menu, LogOut
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { removeToken } from '../utils/auth.js';
 import LogoDashboard from '../assets/logos/RA__ISOLOGO_BLANCO.png';
 
 const menuItems = [
@@ -25,6 +27,14 @@ const menuItems = [
 export default function Layout() {
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        removeToken();
+        // Forzamos la recarga para que App.jsx vuelva a leer el estado de autenticación falso,
+        // o podemos simplemente redirigir, pero un recargo de ventana asegura limpiar el state en memoria temporal
+        window.location.href = '/login';
+    };
 
     const currentRouteName = menuItems.find(item => item.to === location.pathname)?.label || 'Dashboard';
 
@@ -77,13 +87,20 @@ export default function Layout() {
                 </nav>
 
                 {/* Sidebar Footer */}
-                <div className="p-2 border-t border-r border-gray-100 space-y-1">
+                <div className="p-2 border-t border-gray-200 mt-auto space-y-1">
                     <button
                         onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                         className="flex items-center gap-3 p-2 w-full text-left rounded-lg text-gray-500 hover:bg-white hover:text-gray-900 transition-colors"
                     >
                         <Menu className="w-5 h-5 flex-shrink-0" />
                         {!isSidebarCollapsed && <span className="text-sm font-medium">Colapsar</span>}
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 p-2 w-full text-left rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors mt-2"
+                    >
+                        <LogOut className="w-5 h-5 flex-shrink-0" />
+                        {!isSidebarCollapsed && <span className="text-sm font-medium">Cerrar Sesión</span>}
                     </button>
                 </div>
             </div>

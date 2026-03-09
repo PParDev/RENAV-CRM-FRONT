@@ -5,15 +5,19 @@ import Layout from './components/Layout.jsx';
 import Dashboard from './views/Dashboard.jsx';
 import Placeholder from './views/Placeholder.jsx';
 import Leads from './views/Leads.jsx';
+import { isAuthenticatedFunc } from './utils/auth.js';
 
 function App() {
-    // Temporalmente usamos estado local para simular si hay sesión
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    // Al cargar la app verificamos si hay un token válido guardado en localStorage
+    const [isAuthenticated, setIsAuthenticated] = useState(isAuthenticatedFunc());
 
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
+                <Route
+                    path="/login"
+                    element={isAuthenticated ? <Navigate to="/" replace /> : <Login onLogin={() => setIsAuthenticated(true)} />}
+                />
                 <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
                     <Route index element={<Dashboard />} />
                     <Route path="leads" element={<Leads />} />

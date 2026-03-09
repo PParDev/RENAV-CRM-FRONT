@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Send, MoreVertical, Phone, Image as ImageIcon, Paperclip } from 'lucide-react';
+import { X, Send, MoreVertical, Phone, Paperclip, Video, Check } from 'lucide-react';
 
 export default function LeadChatDrawer({ lead, onClose }) {
     const [messages, setMessages] = useState([]);
@@ -7,8 +7,8 @@ export default function LeadChatDrawer({ lead, onClose }) {
     useEffect(() => {
         if (lead) {
             setMessages([
-                { id: 1, text: `Hola, me interesa la propiedad que vi en su página.`, sender: 'them', time: '10:00 AM' },
-                { id: 2, text: `¡Hola ${lead.contacto?.nombre || `Contacto`}! Claro que sí, con gusto te brindamos información. ¿Buscabas alguna zona en específico?`, sender: 'me', time: '10:05 AM' },
+                { id: 1, text: `Hola, me interesa la propiedad ubicada en la zona norte.`, sender: 'them', time: '10:00 AM' },
+                { id: 2, text: `¡Hola ${lead.contacto?.nombre || `Contacto`}! Claro que sí, un ejecutivo de RENAV te está atendiendo. ¿Requieres información comercial o te gustaría agendar una cita para verla?`, sender: 'me', time: '10:05 AM' },
             ]);
         }
     }, [lead]);
@@ -42,96 +42,90 @@ export default function LeadChatDrawer({ lead, onClose }) {
     if (!lead) return null;
 
     return (
-        <div className="fixed inset-y-0 right-0 z-[60] flex shadow-2xl">
-            {/* Backdrop */}
-            <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]" onClick={onClose}></div>
-
-            {/* Drawer */}
-            <div className="relative z-[70] w-[450px] bg-[#efeae2] h-full flex flex-col border-l border-gray-200 transform transition-transform animate-slideInRight">
-                {/* Header Whatsapp Style */}
-                <div className="bg-[#005c4b] text-white px-4 py-3 flex items-center justify-between shadow-sm z-10">
-                    <div className="flex items-center gap-3">
-                        <img
-                            src={`https://i.pravatar.cc/150?u=${lead.id_contacto}`}
-                            alt="avatar"
-                            className="w-10 h-10 rounded-full border-2 border-white/20 object-cover"
-                        />
-                        <div className="flex flex-col">
-                            <span className="font-semibold text-[15px]">{lead.contacto?.nombre || `Contacto #${lead.id_contacto}`}</span>
-                            <span className="text-xs text-white/70">
-                                {lead.contacto?.telefono || 'en línea'}
-                            </span>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-white/90">
-                        <Phone className="w-5 h-5 cursor-pointer hover:text-white transition-colors" />
-                        <MoreVertical className="w-5 h-5 cursor-pointer hover:text-white transition-colors" />
-                        <X className="w-6 h-6 ml-2 cursor-pointer hover:text-white transition-colors" onClick={onClose} />
+        <div className="w-[400px] bg-slate-50 h-full flex flex-col border-l border-gray-200 flex-shrink-0 animate-slideInRight shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.04)]">
+            {/* Header Corporate Style */}
+            <div className="bg-[#0A1128] text-white px-5 py-4 flex items-center justify-between shadow-md z-10 relative overflow-hidden">
+                <div className="absolute right-0 top-0 opacity-5 text-[80px] font-serif pr-2 leading-none select-none">R</div>
+                <div className="flex items-center gap-3 relative z-10">
+                    <img
+                        src={`https://i.pravatar.cc/150?u=${lead.id_contacto}`}
+                        alt="avatar"
+                        className="w-10 h-10 rounded-full border border-[#D4AF37] object-cover"
+                    />
+                    <div className="flex flex-col">
+                        <span className="font-semibold text-sm tracking-wide text-[#D4AF37]">
+                            {lead.contacto?.nombre || `Contacto #${lead.id_contacto}`}
+                        </span>
+                        <span className="text-[11px] text-gray-300 font-medium">
+                            {lead.contacto?.telefono || 'Lead Interesado'}
+                        </span>
                     </div>
                 </div>
+                <div className="flex items-center gap-2 text-gray-300 relative z-10">
+                    <button className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Phone className="w-4 h-4" /></button>
+                    <button className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Video className="w-4 h-4" /></button>
+                    <button className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><MoreVertical className="w-4 h-4" /></button>
+                    <div className="h-5 w-px bg-white/20 mx-1"></div>
+                    <button onClick={onClose} className="p-1.5 hover:bg-white/10 hover:text-[#D4AF37] rounded-full transition-colors"><X className="w-5 h-5" /></button>
+                </div>
+            </div>
 
-                {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 relative custom-scrollbar bg-[url('https://wallpapers.com/images/hd/whatsapp-chat-background-ixrgi5x4k3wylcld.jpg')] bg-cover bg-center">
-                    <div className="absolute inset-0 bg-[#efeae2]/80"></div> {/* Semi-transparent overlay to match Whatsapp Light mode better */}
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-4 relative custom-scrollbar bg-slate-50/50">
+                <div className="text-center relative z-10 mb-6 mt-2">
+                    <span className="bg-gray-200/80 text-gray-600 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+                        Interacción de Hoy
+                    </span>
+                </div>
 
-                    <div className="text-center relative z-10 mb-4">
-                        <span className="bg-[#e1f3fb] text-[#54656f] text-xs px-3 py-1 rounded-lg shadow-sm">Hoy</span>
-                    </div>
-
-                    {messages.map(msg => (
-                        <div key={msg.id} className={`flex relative z-10 ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[85%] rounded-lg px-3 py-2 shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] relative ${msg.sender === 'me'
-                                ? 'bg-[#d9fdd3] rounded-tr-none'
-                                : 'bg-white rounded-tl-none'
-                                }`}>
-                                <p className="text-[14px] text-[#111b21] leading-snug">{msg.text}</p>
-                                <div className="flex items-center justify-end gap-1 mt-1 -mb-1">
-                                    <span className="text-[10px] text-gray-500">{msg.time}</span>
-                                    {msg.sender === 'me' && (
-                                        <svg viewBox="0 0 16 15" width="16" height="15" className="text-[#53bdeb] ml-0.5">
-                                            <path fill="currentColor" d="M15.01 3.316l-.478-.372a.365.365 0 0 0-.51.063L8.666 9.879a.32.32 0 0 1-.484.033l-.358-.325a.319.319 0 0 0-.484.032l-.378.483a.418.418 0 0 0 .036.541l1.32 1.266c.143.14.361.125.484-.033l6.272-8.048a.366.366 0 0 0-.064-.512zm-4.1 0l-.478-.372a.365.365 0 0 0-.51.063L4.566 9.879a.32.32 0 0 1-.484.033L1.891 7.769a.366.366 0 0 0-.515.006l-.423.433a.364.364 0 0 0 .006.514l3.258 3.185c.143.14.361.125.484-.033l6.272-8.048a.365.365 0 0 0-.063-.51z"></path>
-                                        </svg>
-                                    )}
-                                </div>
+                {messages.map(msg => (
+                    <div key={msg.id} className={`flex relative z-10 ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 shadow-sm relative ${msg.sender === 'me'
+                                ? 'bg-white border border-gray-100 text-[#0A1128] rounded-br-sm'
+                                : 'bg-[#0A1128] text-white rounded-bl-sm'
+                            }`}>
+                            <p className="text-[13px] leading-relaxed">{msg.text}</p>
+                            <div className="flex items-center justify-end gap-1.5 mt-1.5">
+                                <span className={`text-[9px] font-medium ${msg.sender === 'me' ? 'text-gray-400' : 'text-gray-400'}`}>{msg.time}</span>
+                                {msg.sender === 'me' && (
+                                    <Check className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                )}
                             </div>
                         </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                </div>
+                    </div>
+                ))}
+                <div ref={messagesEndRef} />
+            </div>
 
-                {/* Input Area */}
-                <div className="bg-[#f0f2f5] px-4 py-3 flex items-center gap-3 z-10 border-t border-gray-200">
-                    <button className="text-[#54656f] hover:text-[#111b21] transition-colors">
-                        <Paperclip className="w-[22px] h-[22px]" />
+            {/* Input Area */}
+            <div className="bg-white p-4 flex items-center gap-3 z-10 border-t border-gray-200">
+                <button className="text-gray-400 hover:text-[#0A1128] transition-colors p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
+                    <Paperclip className="w-5 h-5" />
+                </button>
+                <form onSubmit={handleSend} className="flex-1 flex items-center relative gap-2">
+                    <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        placeholder="Redactar mensaje..."
+                        className="w-full bg-gray-50 border border-gray-200 px-5 py-2.5 rounded-full text-[13px] focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] text-gray-800 transition-all placeholder:text-gray-400"
+                    />
+                    <button
+                        type="submit"
+                        disabled={!newMessage.trim()}
+                        className="text-white bg-[#0A1128] hover:bg-[#1a2b5e] disabled:bg-gray-300 disabled:text-gray-500 transition-colors p-2.5 rounded-full shadow-sm flex-shrink-0 flex items-center justify-center transform disabled:scale-100 hover:scale-105"
+                    >
+                        <Send className="w-4 h-4" style={{ transform: 'translateX(-1px) translateY(1px)' }} />
                     </button>
-                    <button className="text-[#54656f] hover:text-[#111b21] transition-colors">
-                        <ImageIcon className="w-[22px] h-[22px]" />
-                    </button>
-                    <form onSubmit={handleSend} className="flex-1 flex items-center mr-1">
-                        <input
-                            type="text"
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            placeholder="Escribe un mensaje"
-                            className="w-full bg-white px-4 py-2.5 rounded-lg text-sm focus:outline-none shadow-sm text-[#111b21]"
-                        />
-                        {newMessage.trim() ? (
-                            <button type="submit" className="ml-3 text-[#00a884] hover:text-[#008f6f] transition-colors p-2 bg-white rounded-full shadow-sm flex-shrink-0 flex items-center justify-center h-10 w-10">
-                                <Send className="w-5 h-5 ml-1" />
-                            </button>
-                        ) : (
-                            <div className="ml-3 p-2 text-transparent flex-shrink-0 h-10 w-10"></div>
-                        )}
-                    </form>
-                </div>
+                </form>
             </div>
             <style>{`
                 @keyframes slideInRight {
-                    from { transform: translateX(100%); }
-                    to { transform: translateX(0); }
+                    from { margin-right: -400px; opacity: 0; }
+                    to { margin-right: 0; opacity: 1; }
                 }
                 .animate-slideInRight {
-                    animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }
             `}</style>
         </div>

@@ -14,7 +14,7 @@ const menuItems = [
     { name: 'Properties', label: 'Propiedades', to: '/properties', icon: Home },
     { name: 'Opportunities', label: 'Oportunidades', to: '/opportunities', icon: Zap },
     { name: 'Account', label: 'Cuenta', to: '/account', icon: UserCircle },
-    { name: 'Invoices', label: 'Facturas', to: '/invoices', icon: FileText },
+    { name: 'Invoices', label: 'Expediente', to: '/invoices', icon: FileText },
     { name: 'Tasks', label: 'Tareas', to: '/tasks', icon: CheckSquare },
     { name: 'Meetings', label: 'Reuniones', to: '/meetings', icon: Calendar },
     { name: 'Calls', label: 'Llamadas', to: '/calls', icon: Phone },

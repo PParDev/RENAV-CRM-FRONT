@@ -31,7 +31,7 @@ const Login = ({ onLogin }) => {
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-300 mb-2">
-                                Usuario / Correo
+                                Correo
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

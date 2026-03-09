@@ -98,12 +98,6 @@ const Login = ({ onLogin }) => {
 
                     <div className="mt-8 text-center text-sm text-gray-500 space-y-2">
                         <p>
-                            ¿No tienes cuenta?{' '}
-                            <button className="text-[#C4A467] hover:text-[#b09259] font-medium transition-colors">
-                                Regístrate aquí
-                            </button>
-                        </p>
-                        <p>
                             ¿Olvidaste la contraseña?{' '}
                             <button className="text-[#C4A467] hover:text-[#b09259] font-medium transition-colors">
                                 Recupérala aquí

@@ -7,6 +7,7 @@ import Placeholder from './views/Placeholder.jsx';
 import Leads from './views/Leads.jsx';
 import { isAuthenticatedFunc } from './utils/auth.js';
 import RecuperarPassword from "./views/RecuperarPassword";
+import Contacts from './views/Contacts.jsx';
 
 function App() {
     // Al cargar la app verificamos si hay un token válido guardado en localStorage
@@ -23,7 +24,7 @@ function App() {
                 <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
                     <Route index element={<Dashboard />} />
                     <Route path="leads" element={<Leads />} />
-                    <Route path="contacts" element={<Placeholder title="Contacts" />} />
+                    <Route path="contacts" element={<Contacts />} />
                     <Route path="properties" element={<Placeholder title="Properties" />} />
                     <Route path="opportunities" element={<Placeholder title="Opportunities" />} />
                     <Route path="account" element={<Placeholder title="Account" />} />

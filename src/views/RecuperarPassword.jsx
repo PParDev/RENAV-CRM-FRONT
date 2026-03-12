@@ -1,16 +1,30 @@
 import React, { useState } from "react";
-import { Mail, KeyRound } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Mail, KeyRound, Eye, EyeOff } from "lucide-react";
 import LogoRenav from "../assets/logos/RA__ISOLOGO_DORADO.png";
 
 const RecuperarPassword = () => {
   const [email, setEmail] = useState("");
   const [codigo, setCodigo] = useState("");
   const [nuevaPassword, setNuevaPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [step, setStep] = useState(1);
   const [mensaje, setMensaje] = useState("");
+  const [error, setError] = useState(false);
+  const navigate = useNavigate();
 
   const enviarCodigo = async () => {
     try {
+      if (!email) {
+        setError(true);
+        setMensaje("Por favor ingresa un correo.");
+        return;
+      }
+
       const res = await fetch("http://localhost:3000/api/auth/recuperar", {
         method: "POST",
         headers: {
@@ -23,15 +37,33 @@ const RecuperarPassword = () => {
 
       if (!res.ok) throw new Error(data.message);
 
-      setMensaje("Se envió un código a tu correo.");
+      setError(false);
+      setMensaje("Se envió un código a tu correo. Expirará en 15 minutos.");
       setStep(2);
     } catch (error) {
+      setError(true);
       setMensaje(error.message);
     }
   };
 
   const cambiarPassword = async () => {
     try {
+      if (!codigo) {
+        setError(true);
+        setMensaje("Ingresa el código de seguridad.");
+        return;
+      }
+      if (!nuevaPassword || !confirmPassword) {
+        setError(true);
+        setMensaje("Ingresa y confirma tu nueva contraseña.");
+        return;
+      }
+      if (nuevaPassword !== confirmPassword) {
+        setError(true);
+        setMensaje("Las contraseñas no coinciden.");
+        return;
+      }
+
       const res = await fetch("http://localhost:3000/api/auth/reset-password", {
         method: "POST",
         headers: {
@@ -48,8 +80,13 @@ const RecuperarPassword = () => {
 
       if (!res.ok) throw new Error(data.message);
 
-      setMensaje("Contraseña actualizada correctamente.");
+      setError(false);
+      setMensaje("Contraseña actualizada correctamente. Redirigiendo...");
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (error) {
+      setError(true);
       setMensaje(error.message);
     }
   };
@@ -101,17 +138,43 @@ const RecuperarPassword = () => {
                   placeholder="Código recibido"
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-[#090F1A] border border-gray-700 rounded-xl text-white"
+                  className="w-full pl-10 pr-4 py-3 bg-[#090F1A] border border-gray-700 rounded-xl text-white focus:ring-2 focus:ring-[#C4A467]"
                 />
               </div>
 
-              <input
-                type="password"
-                placeholder="Nueva contraseña"
-                value={nuevaPassword}
-                onChange={(e) => setNuevaPassword(e.target.value)}
-                className="w-full mb-6 px-4 py-3 bg-[#090F1A] border border-gray-700 rounded-xl text-white"
-              />
+              <div className="relative mb-4">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Nueva contraseña"
+                  value={nuevaPassword}
+                  onChange={(e) => setNuevaPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#090F1A] border border-gray-700 rounded-xl text-white pr-10 focus:ring-2 focus:ring-[#C4A467]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <div className="relative mb-6">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Confirmar nueva contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#090F1A] border border-gray-700 rounded-xl text-white pr-10 focus:ring-2 focus:ring-[#C4A467]"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
 
               <button
                 onClick={cambiarPassword}
@@ -123,7 +186,9 @@ const RecuperarPassword = () => {
           )}
 
           {mensaje && (
-            <p className="text-sm text-center mt-6 text-[#C4A467]">{mensaje}</p>
+            <p className={`text-sm text-center mt-6 ${error ? 'text-red-500' : 'text-[#C4A467]'}`}>
+              {mensaje}
+            </p>
           )}
         </div>
 

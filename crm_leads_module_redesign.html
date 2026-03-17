@@ -1,0 +1,431 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary);font-size:14px}
+.leads-root{padding:0 0 2rem}
+.top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.page-title{font-size:22px;font-weight:500}
+.top-actions{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 14px;border-radius:var(--border-radius-md);font-size:13px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.btn-primary:hover{background:#16213e}
+.btn-outline{border:0.5px solid var(--color-border-secondary)}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
+.kpi-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;cursor:pointer;border:0.5px solid transparent;transition:border-color .15s}
+.kpi-card:hover{border-color:var(--color-border-secondary)}
+.kpi-card.active{border-color:#3b82f6;background:var(--color-background-info)}
+.kpi-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px}
+.kpi-num{font-size:24px;font-weight:500;line-height:1.1}
+.kpi-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:4px}
+.kpi-delta{font-size:11px;margin-top:4px}
+.delta-up{color:#16a34a}
+.delta-down{color:#dc2626}
+.tabs{display:flex;gap:4px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:1rem}
+.tab{padding:8px 14px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--color-text-secondary);background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-sans)}
+.tab:hover{color:var(--color-text-primary)}
+.tab.active{border-bottom-color:#1a1a2e;color:var(--color-text-primary);font-weight:500}
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;max-width:320px;position:relative}
+.search-box input{width:100%;padding:7px 12px 7px 32px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);font-family:var(--font-sans)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--color-text-tertiary);font-size:14px}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select.filter{padding:7px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:13px;background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;font-family:var(--font-sans)}
+.view-toggle{display:flex;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden}
+.view-btn{padding:6px 11px;font-size:13px;cursor:pointer;border:none;background:var(--color-background-primary);color:var(--color-text-secondary);font-family:var(--font-sans)}
+.view-btn.active{background:var(--color-background-tertiary);color:var(--color-text-primary)}
+.table-wrap{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+thead{background:var(--color-background-secondary)}
+th{padding:10px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--color-text-primary)}
+th .sort-icon{display:inline-block;margin-left:4px;opacity:.4;font-size:10px}
+th.sorted .sort-icon{opacity:1}
+td{padding:10px 12px;border-bottom:0.5px solid var(--color-border-tertiary);vertical-align:middle;font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--color-background-secondary)}
+.col-check{width:36px}
+.col-lead{width:auto}
+.col-score{width:70px}
+.col-est{width:90px}
+.col-estado{width:100px}
+.col-prioridad{width:90px}
+.col-asignado{width:110px}
+.col-contacto{width:110px}
+.col-acciones{width:80px}
+.avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.lead-cell{display:flex;align-items:center;gap:10px}
+.lead-info{min-width:0}
+.lead-name{font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lead-email{font-size:11px;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;white-space:nowrap}
+.badge-nuevo{background:#e0f2fe;color:#0369a1}
+.badge-proceso{background:#fef3c7;color:#92400e}
+.badge-calificado{background:#dcfce7;color:#166534}
+.badge-descartado{background:#fee2e2;color:#991b1b}
+.badge-urgente{background:#fee2e2;color:#991b1b}
+.badge-alta{background:#fef3c7;color:#92400e}
+.badge-media{background:#e0f2fe;color:#0369a1}
+.badge-baja{background:#f3f4f6;color:#6b7280}
+.score-bar{display:flex;align-items:center;gap:6px}
+.score-track{width:40px;height:4px;background:var(--color-background-tertiary);border-radius:2px;overflow:hidden}
+.score-fill{height:100%;border-radius:2px}
+.score-high{background:#16a34a}
+.score-med{background:#d97706}
+.score-low{background:#dc2626}
+.score-val{font-size:11px;font-weight:500;color:var(--color-text-secondary);width:20px}
+.last-contact{font-size:11px;color:var(--color-text-secondary)}
+.last-contact.overdue{color:#dc2626}
+.last-contact.warning{color:#d97706}
+.action-icons{display:flex;gap:4px}
+.action-btn{width:26px;height:26px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:none;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary)}
+.action-btn:hover{background:var(--color-background-secondary);border-color:var(--color-border-secondary)}
+.assignee{display:flex;align-items:center;gap:6px;font-size:12px}
+.avatar-xs{width:20px;height:20px;border-radius:50%;font-size:9px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:1rem;font-size:13px;color:var(--color-text-secondary);flex-wrap:wrap;gap:8px}
+.page-btns{display:flex;gap:4px}
+.page-btn{width:30px;height:30px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;font-size:13px;color:var(--color-text-primary);display:flex;align-items:center;justify-content:center;font-family:var(--font-sans)}
+.page-btn.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.page-btn:hover:not(.active){background:var(--color-background-secondary)}
+.kanban-view{display:none;gap:12px;overflow-x:auto;padding-bottom:8px}
+.kanban-view.visible{display:flex}
+.kanban-col{min-width:210px;flex:1;background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px;border:0.5px solid var(--color-border-tertiary)}
+.kanban-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.kanban-title{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-secondary)}
+.kanban-count{font-size:11px;background:var(--color-background-primary);padding:1px 7px;border-radius:99px;border:0.5px solid var(--color-border-tertiary);color:var(--color-text-secondary)}
+.kanban-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px;margin-bottom:8px;cursor:pointer}
+.kanban-card:hover{border-color:var(--color-border-secondary)}
+.kanban-card-name{font-size:13px;font-weight:500;margin-bottom:4px}
+.kanban-card-email{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px}
+.kanban-card-footer{display:flex;align-items:center;justify-content:space-between}
+.empty-col{font-size:12px;color:var(--color-text-tertiary);text-align:center;padding:16px 0}
+.bulk-bar{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--color-background-info);border-radius:var(--border-radius-md);margin-bottom:12px;font-size:13px}
+.bulk-bar.visible{display:flex}
+.bulk-count{font-weight:500;color:var(--color-text-info)}
+</style>
+
+<div class="leads-root">
+  <div class="top-bar">
+    <div>
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:4px">CRM › Leads</div>
+      <div class="page-title">Módulo de Leads</div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-outline" onclick="exportar()">⬇ Exportar Excel</button>
+      <button class="btn btn-outline" onclick="importar()">⬆ Importar</button>
+      <button class="btn btn-primary" onclick="crearLead()">+ Crear lead</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card active" onclick="filterByKPI('todos',this)">
+      <div class="kpi-label">Total leads</div>
+      <div class="kpi-num" id="kpiTotal">14</div>
+      <div class="kpi-sub">Este mes</div>
+      <div class="kpi-delta delta-up">↑ 17% vs mes anterior</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKPI('nuevo',this)">
+      <div class="kpi-label">Sin contactar</div>
+      <div class="kpi-num" id="kpiNuevo">6</div>
+      <div class="kpi-sub">Requieren acción</div>
+      <div class="kpi-delta delta-up">↑ 2 esta semana</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKPI('en_proceso',this)">
+      <div class="kpi-label">En proceso</div>
+      <div class="kpi-num" id="kpiProceso">5</div>
+      <div class="kpi-sub">Activos</div>
+      <div class="kpi-delta" style="color:var(--color-text-tertiary)">Sin cambios</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKPI('urgente',this)">
+      <div class="kpi-label">Urgentes</div>
+      <div class="kpi-num" id="kpiUrgente" style="color:#dc2626">3</div>
+      <div class="kpi-sub">Alta prioridad</div>
+      <div class="kpi-delta delta-down">↑ 1 hoy</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('todos',this)">Todos (14)</button>
+    <button class="tab" onclick="setTab('nuevo',this)">Nuevos (6)</button>
+    <button class="tab" onclick="setTab('en_proceso',this)">En proceso (5)</button>
+    <button class="tab" onclick="setTab('seguimiento',this)">Seguimiento (2)</button>
+    <button class="tab" onclick="setTab('descartado',this)">Descartados (1)</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" placeholder="Buscar por nombre, correo o ID..." id="searchInput" oninput="filterLeads()">
+    </div>
+    <div class="filter-row">
+      <select class="filter" onchange="filterLeads()" id="fEstado">
+        <option value="">Estado</option>
+        <option>Nuevo</option>
+        <option>En proceso</option>
+        <option>Calificado</option>
+        <option>Descartado</option>
+      </select>
+      <select class="filter" onchange="filterLeads()" id="fPrioridad">
+        <option value="">Prioridad</option>
+        <option>Urgente</option>
+        <option>Alta</option>
+        <option>Media</option>
+        <option>Baja</option>
+      </select>
+      <select class="filter" onchange="filterLeads()" id="fAsignado">
+        <option value="">Agente</option>
+        <option>Ana López</option>
+        <option>Carlos R.</option>
+        <option>María G.</option>
+      </select>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      <span style="font-size:12px;color:var(--color-text-secondary)" id="countLabel">Mostrando 14 leads</span>
+      <div class="view-toggle">
+        <button class="view-btn active" onclick="setView('table',this)" title="Tabla">☰</button>
+        <button class="view-btn" onclick="setView('kanban',this)" title="Kanban">⊞</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bulk-bar" id="bulkBar">
+    <span class="bulk-count" id="bulkCount">0 seleccionados</span>
+    <button class="btn btn-outline" style="padding:4px 10px;font-size:12px" onclick="bulkAccion('asignar')">Asignar agente</button>
+    <button class="btn btn-outline" style="padding:4px 10px;font-size:12px" onclick="bulkAccion('estado')">Cambiar estado</button>
+    <button class="btn btn-outline" style="padding:4px 10px;font-size:12px;color:#dc2626;border-color:#dc2626" onclick="bulkAccion('descartar')">Descartar</button>
+    <button class="btn btn-outline" style="padding:4px 10px;font-size:12px;margin-left:auto" onclick="clearSelection()">✕ Cancelar</button>
+  </div>
+
+  <div id="tableView">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-check"><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+            <th class="col-lead" onclick="sortBy('nombre')">Nombre del lead <span class="sort-icon">↕</span></th>
+            <th class="col-score" onclick="sortBy('score')">Score <span class="sort-icon">↕</span></th>
+            <th class="col-est" onclick="sortBy('valor')">Valor est. <span class="sort-icon">↕</span></th>
+            <th class="col-estado" onclick="sortBy('estado')">Estado <span class="sort-icon">↕</span></th>
+            <th class="col-prioridad" onclick="sortBy('prioridad')">Prioridad <span class="sort-icon">↕</span></th>
+            <th class="col-asignado">Asignado a</th>
+            <th class="col-contacto">Último contacto</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="leadsBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div id="pageInfo">1–10 de 14 leads</div>
+      <div class="page-btns">
+        <button class="page-btn" onclick="goPage(-1)">‹</button>
+        <button class="page-btn active" id="pg1" onclick="goPageAbs(1)">1</button>
+        <button class="page-btn" id="pg2" onclick="goPageAbs(2)">2</button>
+        <button class="page-btn" onclick="goPage(1)">›</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kanban-view" id="kanbanView"></div>
+</div>
+
+<script>
+const LEADS = [
+  {id:1,nombre:'Lucia Mendoza',email:'lucia@empresa.com',estado:'Nuevo',prioridad:'Urgente',score:88,valor:'$320,000',asignado:'Ana López',aColor:'#dbeafe',aText:'#1d4ed8',aInit:'AL',color:'#fce7f3',text:'#9d174d',init:'LM',diasContacto:0},
+  {id:2,nombre:'Jonathan Perez',email:'jperez@gmail.com',estado:'Nuevo',prioridad:'Urgente',score:82,valor:'$280,000',asignado:'Carlos R.',aColor:'#dcfce7',aText:'#166534',aInit:'CR',color:'#dbeafe',text:'#1d4ed8',init:'JP',diasContacto:1},
+  {id:3,nombre:'Azul Barraza',email:'abarraza@gmail.com',estado:'Nuevo',prioridad:'Urgente',score:76,valor:'$450,000',asignado:'María G.',aColor:'#fef3c7',aText:'#92400e',aInit:'MG',color:'#d1fae5',text:'#065f46',init:'AB',diasContacto:0},
+  {id:4,nombre:'Gaby Ramos',email:'gramos@gmail.com',estado:'Nuevo',prioridad:'Media',score:61,valor:'$190,000',asignado:'Ana López',aColor:'#dbeafe',aText:'#1d4ed8',aInit:'AL',color:'#fef9c3',text:'#713f12',init:'GR',diasContacto:3},
+  {id:5,nombre:'Elizabeth Torres',email:'etorres@gmail.com',estado:'Nuevo',prioridad:'Media',score:55,valor:'$220,000',asignado:'Carlos R.',aColor:'#dcfce7',aText:'#166534',aInit:'CR',color:'#ffe4e6',text:'#9f1239',init:'ET',diasContacto:5},
+  {id:6,nombre:'Gael Zepeda',email:'qzepeda@gmail.com',estado:'Nuevo',prioridad:'Media',score:48,valor:'$150,000',asignado:'María G.',aColor:'#fef3c7',aText:'#92400e',aInit:'MG',color:'#e0e7ff',text:'#3730a3',init:'GZ',diasContacto:7},
+  {id:7,nombre:'Roberto Salinas',email:'rsalinas@hotmail.com',estado:'En proceso',prioridad:'Alta',score:91,valor:'$500,000',asignado:'Ana López',aColor:'#dbeafe',aText:'#1d4ed8',aInit:'AL',color:'#fce7f3',text:'#9d174d',init:'RS',diasContacto:1},
+  {id:8,nombre:'Carmen Vega',email:'cvega@outlook.com',estado:'En proceso',prioridad:'Alta',score:79,valor:'$380,000',asignado:'Carlos R.',aColor:'#dcfce7',aText:'#166534',aInit:'CR',color:'#d1fae5',text:'#065f46',init:'CV',diasContacto:2},
+  {id:9,nombre:'Marcos Ibarra',email:'mibarra@gmail.com',estado:'En proceso',prioridad:'Media',score:67,valor:'$260,000',asignado:'María G.',aColor:'#fef3c7',aText:'#92400e',aInit:'MG',color:'#fef9c3',text:'#713f12',init:'MI',diasContacto:4},
+  {id:10,nombre:'Sofia Delgado',email:'sdelgado@gmail.com',estado:'En proceso',prioridad:'Baja',score:44,valor:'$120,000',asignado:'Ana López',aColor:'#dbeafe',aText:'#1d4ed8',aInit:'AL',color:'#ffe4e6',text:'#9f1239',init:'SD',diasContacto:6},
+  {id:11,nombre:'Diego Fuentes',email:'dfuentes@empresa.com',estado:'En proceso',prioridad:'Media',score:58,valor:'$175,000',asignado:'Carlos R.',aColor:'#dcfce7',aText:'#166534',aInit:'CR',color:'#e0e7ff',text:'#3730a3',init:'DF',diasContacto:8},
+  {id:12,nombre:'Valeria Cruz',email:'vcruz@gmail.com',estado:'Calificado',prioridad:'Alta',score:95,valor:'$620,000',asignado:'Ana López',aColor:'#dbeafe',aText:'#1d4ed8',aInit:'AL',color:'#dbeafe',text:'#1d4ed8',init:'VC',diasContacto:0},
+  {id:13,nombre:'Pablo Ríos',email:'prios@hotmail.com',estado:'Calificado',prioridad:'Alta',score:87,valor:'$410,000',asignado:'María G.',aColor:'#fef3c7',aText:'#92400e',aInit:'MG',color:'#d1fae5',text:'#065f46',init:'PR',diasContacto:2},
+  {id:14,nombre:'Laura Montoya',email:'lmontoya@gmail.com',estado:'Descartado',prioridad:'Baja',score:12,valor:'$0',asignado:'Carlos R.',aColor:'#dcfce7',aText:'#166534',aInit:'CR',color:'#f3f4f6',text:'#6b7280',init:'LM2',diasContacto:30},
+];
+
+let filtered = [...LEADS];
+let currentPage = 1;
+const PER_PAGE = 10;
+let sortField = '';
+let sortDir = 1;
+let selected = new Set();
+let activeTab = 'todos';
+let kpiFilter = 'todos';
+
+function estadoBadge(e){
+  const m={Nuevo:'badge-nuevo',Calificado:'badge-calificado','En proceso':'badge-proceso',Descartado:'badge-descartado'};
+  return `<span class="badge ${m[e]||'badge-nuevo'}">${e}</span>`;
+}
+function prioBadge(p){
+  const m={Urgente:'badge-urgente',Alta:'badge-alta',Media:'badge-media',Baja:'badge-baja'};
+  return `<span class="badge ${m[p]||'badge-media'}">${p}</span>`;
+}
+function scoreBar(s){
+  const cls=s>=70?'score-high':s>=40?'score-med':'score-low';
+  return `<div class="score-bar"><div class="score-track"><div class="score-fill ${cls}" style="width:${s}%"></div></div><span class="score-val">${s}</span></div>`;
+}
+function lastContact(d){
+  if(d===0)return `<span class="last-contact">Hoy</span>`;
+  if(d<=2)return `<span class="last-contact">Hace ${d}d</span>`;
+  if(d<=7)return `<span class="last-contact warning">Hace ${d}d</span>`;
+  return `<span class="last-contact overdue">Hace ${d}d ⚠</span>`;
+}
+
+function render(){
+  const start=(currentPage-1)*PER_PAGE;
+  const slice=filtered.slice(start,start+PER_PAGE);
+  const tbody=document.getElementById('leadsBody');
+  tbody.innerHTML=slice.map(l=>{
+    const chk=selected.has(l.id)?'checked':'';
+    return `<tr>
+      <td class="col-check"><input type="checkbox" ${chk} onchange="toggleRow(${l.id},this)"></td>
+      <td class="col-lead"><div class="lead-cell">
+        <div class="avatar" style="background:${l.color};color:${l.text}">${l.init}</div>
+        <div class="lead-info"><div class="lead-name">${l.nombre}</div><div class="lead-email">${l.email}</div></div>
+      </div></td>
+      <td class="col-score">${scoreBar(l.score)}</td>
+      <td class="col-est" style="font-size:12px;font-weight:500">${l.valor}</td>
+      <td class="col-estado">${estadoBadge(l.estado)}</td>
+      <td class="col-prioridad">${prioBadge(l.prioridad)}</td>
+      <td class="col-asignado"><div class="assignee"><div class="avatar-xs" style="background:${l.aColor};color:${l.aText}">${l.aInit}</div>${l.asignado}</div></td>
+      <td class="col-contacto">${lastContact(l.diasContacto)}</td>
+      <td class="col-acciones"><div class="action-icons">
+        <button class="action-btn" title="Correo">✉</button>
+        <button class="action-btn" title="Llamada">📞</button>
+        <button class="action-btn" title="Más">⋯</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  const total=filtered.length;
+  const end=Math.min(start+PER_PAGE,total);
+  document.getElementById('pageInfo').textContent=`${start+1}–${end} de ${total} leads`;
+  document.getElementById('countLabel').textContent=`Mostrando ${total} leads`;
+  const pages=Math.ceil(total/PER_PAGE);
+  document.getElementById('pg1').className='page-btn'+(currentPage===1?' active':'');
+  document.getElementById('pg2').style.display=pages>1?'flex':'none';
+  document.getElementById('pg2').className='page-btn'+(currentPage===2?' active':'');
+  renderKanban();
+}
+
+function filterLeads(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const fE=document.getElementById('fEstado').value;
+  const fP=document.getElementById('fPrioridad').value;
+  const fA=document.getElementById('fAsignado').value;
+  filtered=LEADS.filter(l=>{
+    const matchQ=!q||l.nombre.toLowerCase().includes(q)||l.email.toLowerCase().includes(q);
+    const matchE=!fE||l.estado===fE;
+    const matchP=!fP||l.prioridad===fP;
+    const matchA=!fA||l.asignado===fA;
+    const matchTab=activeTab==='todos'||
+      (activeTab==='nuevo'&&l.estado==='Nuevo')||
+      (activeTab==='en_proceso'&&l.estado==='En proceso')||
+      (activeTab==='seguimiento'&&l.diasContacto>3&&l.estado!=='Descartado')||
+      (activeTab==='descartado'&&l.estado==='Descartado');
+    const matchKPI=kpiFilter==='todos'||
+      (kpiFilter==='nuevo'&&l.estado==='Nuevo')||
+      (kpiFilter==='en_proceso'&&l.estado==='En proceso')||
+      (kpiFilter==='urgente'&&l.prioridad==='Urgente');
+    return matchQ&&matchE&&matchP&&matchA&&matchTab&&matchKPI;
+  });
+  currentPage=1;
+  selected.clear();
+  updateBulkBar();
+  render();
+}
+
+function sortBy(field){
+  if(sortField===field)sortDir*=-1;else{sortField=field;sortDir=1;}
+  filtered.sort((a,b)=>{
+    let av=a[field],bv=b[field];
+    if(typeof av==='string')return av.localeCompare(bv)*sortDir;
+    return(av-bv)*sortDir;
+  });
+  render();
+}
+
+function setTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  filterLeads();
+}
+
+function filterByKPI(type,el){
+  kpiFilter=type;
+  document.querySelectorAll('.kpi-card').forEach(k=>k.classList.remove('active'));
+  el.classList.add('active');
+  filterLeads();
+}
+
+function toggleAll(cb){
+  const start=(currentPage-1)*PER_PAGE;
+  filtered.slice(start,start+PER_PAGE).forEach(l=>{
+    if(cb.checked)selected.add(l.id);else selected.delete(l.id);
+  });
+  updateBulkBar();render();
+}
+
+function toggleRow(id,cb){
+  if(cb.checked)selected.add(id);else selected.delete(id);
+  updateBulkBar();
+}
+
+function updateBulkBar(){
+  const bar=document.getElementById('bulkBar');
+  const cnt=document.getElementById('bulkCount');
+  if(selected.size>0){bar.classList.add('visible');cnt.textContent=`${selected.size} seleccionados`;}
+  else bar.classList.remove('visible');
+}
+
+function clearSelection(){selected.clear();updateBulkBar();render();}
+
+function goPage(d){currentPage=Math.max(1,Math.min(2,currentPage+d));render();}
+function goPageAbs(p){currentPage=p;render();}
+
+function setView(v,el){
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  if(v==='kanban'){
+    document.getElementById('tableView').style.display='none';
+    document.getElementById('kanbanView').classList.add('visible');
+    renderKanban();
+  }else{
+    document.getElementById('tableView').style.display='block';
+    document.getElementById('kanbanView').classList.remove('visible');
+    render();
+  }
+}
+
+function renderKanban(){
+  const cols=['Nuevo','En proceso','Calificado','Descartado'];
+  const kv=document.getElementById('kanbanView');
+  kv.innerHTML=cols.map(c=>{
+    const items=LEADS.filter(l=>l.estado===c);
+    const cards=items.length?items.map(l=>`
+      <div class="kanban-card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <div class="avatar" style="width:26px;height:26px;font-size:10px;background:${l.color};color:${l.text}">${l.init}</div>
+          <div class="kanban-card-name">${l.nombre}</div>
+        </div>
+        <div class="kanban-card-email">${l.email}</div>
+        <div class="kanban-card-footer">${prioBadge(l.prioridad)}${scoreBar(l.score)}</div>
+      </div>`).join(''):`<div class="empty-col">Sin leads</div>`;
+    return `<div class="kanban-col">
+      <div class="kanban-header"><span class="kanban-title">${c}</span><span class="kanban-count">${items.length}</span></div>
+      ${cards}
+    </div>`;
+  }).join('');
+}
+
+function exportar(){sendPrompt('¿Cómo implemento la exportación de leads a Excel en este CRM?');}
+function importar(){sendPrompt('¿Cómo implemento la importación masiva de leads desde CSV/Excel?');}
+function crearLead(){sendPrompt('¿Qué campos debería tener el formulario de creación de un nuevo lead para un CRM inmobiliario?');}
+function bulkAccion(a){sendPrompt(`¿Cómo implemento la acción masiva "${a}" para leads seleccionados en el CRM?`);}
+
+render();
+</script>

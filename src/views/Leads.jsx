@@ -3,9 +3,15 @@ import {
     Users, MoreHorizontal, Plus, Search, Filter, Download, Upload,
     Mail, Phone, Calendar, MessageSquare, ChevronLeft,
     ChevronRight, X, LayoutGrid, List, Send, AlertTriangle,
-    Check, Trash2, UserCheck, Tag, ArrowLeft, StickyNote, Clock
+    Check, Trash2, UserCheck, Tag, ArrowLeft, StickyNote, Clock,
+    Bot, Loader2, Sparkles
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+
+// ─── OpenRouter AI config ──────────────────────────────────────────────────
+// NOTE: move this to an env variable (VITE_OPENROUTER_KEY) before production
+const OPENROUTER_KEY = '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';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 const getLeadScore = (lead) => {
@@ -163,6 +169,12 @@ export default function Leads() {
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const [showBulkStatusMenu, setShowBulkStatusMenu] = useState(false);
     const chatScrollRef = useRef(null);
+
+    // AI & client simulation
+    const [aiLoading, setAiLoading] = useState(false);
+    const [showSimModal, setShowSimModal] = useState(false);
+    const [simInput, setSimInput] = useState('');
+    const [simSubmitting, setSimSubmitting] = useState(false);
 
     const [formData, setFormData] = useState({
         nombre: '', correo: '', telefono: '', origen: '', estado: 'NUEVO', prioridad: 'MEDIA', notas_iniciales: ''
@@ -325,6 +337,7 @@ export default function Leads() {
                 .map(a => ({
                     id: a.id_mensaje,
                     from: a.es_entrante ? 'lead' : 'agent',
+                    isAI: a.canal === 'AI',
                     text: a.texto,
                     time: new Date(a.creado_en).toLocaleString('es-MX', { hour: 'numeric', minute: '2-digit', hour12: true })
                 }));
@@ -336,40 +349,167 @@ export default function Leads() {
 
     useEffect(() => {
         if (chatScrollRef.current) chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-    }, [chatMessages]);
+    }, [chatMessages, aiLoading]);
 
     const handleChatSend = async () => {
         const text = chatInput.trim();
-        if (!text || !activePanelLead) return;
+        if (!text || !activePanelLead || aiLoading) return;
         setChatInput('');
         try {
+            // 1. Save agent message to DB
             const res = await fetch('/api/mensajes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_lead: activePanelLead.id_lead, es_entrante: false, canal: 'WEB', texto: text })
             });
             if (!res.ok) throw new Error('Error saving chat message');
+
+            // Refresh lead to show agent message
             const detailRes = await fetch(`/api/leads/${activePanelLead.id_lead}`);
             if (detailRes.ok) {
                 const detailData = await detailRes.json();
                 setActivePanelLead(prev => ({ ...prev, ...detailData }));
             }
 
-            setTimeout(async () => {
+            // 2. Call OpenRouter AI — responds as the CRM agent
+            setAiLoading(true);
+
+            // client msgs = 'user', agent/AI msgs = 'assistant'
+            const historyForAI = chatMessages.map(m => ({
+                role: m.from === 'lead' ? 'user' : 'assistant',
+                content: m.text,
+            }));
+
+            const aiRes = await fetch(OPENROUTER_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'RENAV CRM',
+                },
+                body: JSON.stringify({
+                    model: 'openai/gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `Eres un asistente de atención al cliente de RENAV Real Estate Group. Estás respondiendo en nombre del equipo comercial al lead "${activePanelLead.contacto?.nombre || 'cliente'}". Su estado en el CRM es "${activePanelLead.estado}" y prioridad "${activePanelLead.prioridad}". Responde de forma profesional, amable y orientada a cerrar la venta. Sé breve (1-3 oraciones). Habla siempre en español.`,
+                        },
+                        ...historyForAI,
+                        { role: 'user', content: text },
+                    ],
+                }),
+            });
+
+            if (aiRes.ok) {
+                const aiData = await aiRes.json();
+                const aiText = aiData.choices?.[0]?.message?.content?.trim() || 'Gracias por contactarnos, con gusto te atendemos.';
+
+                // 3. Save AI response as OUTGOING message (the AI responds as the agent)
                 await fetch('/api/mensajes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_lead: activePanelLead.id_lead, es_entrante: true, canal: 'WEB', texto: 'Muchas gracias, lo reviso y te aviso.' })
+                    body: JSON.stringify({ id_lead: activePanelLead.id_lead, es_entrante: false, canal: 'AI', texto: aiText }),
                 });
-                const r = await fetch(`/api/leads/${activePanelLead.id_lead}`);
-                if (r.ok) {
-                    const rData = await r.json();
+
+                const r2 = await fetch(`/api/leads/${activePanelLead.id_lead}`);
+                if (r2.ok) {
+                    const rData = await r2.json();
                     setActivePanelLead(prev => ({ ...prev, ...rData }));
                 }
-            }, 3000);
+            }
         } catch (err) {
             console.error(err);
             alert('Error al enviar el mensaje');
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    // ── Simulate client message + auto AI response ─────────────────────────
+    const handleSimSubmit = async () => {
+        const text = simInput.trim();
+        if (!text || !activePanelLead) return;
+        try {
+            setSimSubmitting(true);
+
+            // 1. Save client message (incoming)
+            const res = await fetch('/api/mensajes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_lead: activePanelLead.id_lead,
+                    es_entrante: true,
+                    canal: 'WEB',
+                    texto: text,
+                }),
+            });
+            if (!res.ok) throw new Error('Error al guardar el mensaje');
+            setSimInput('');
+            setShowSimModal(false);
+
+            // Refresh to show client message immediately
+            const r = await fetch(`/api/leads/${activePanelLead.id_lead}`);
+            if (r.ok) {
+                const data = await r.json();
+                setActivePanelLead(prev => ({ ...prev, ...data }));
+            }
+
+            // 2. Call AI to respond as agent to the client's message
+            setAiLoading(true);
+
+            const historyForAI = chatMessages.map(m => ({
+                role: m.from === 'lead' ? 'user' : 'assistant',
+                content: m.text,
+            }));
+
+            const aiRes = await fetch(OPENROUTER_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.origin,
+                    'X-Title': 'RENAV CRM',
+                },
+                body: JSON.stringify({
+                    model: 'openai/gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: `Eres un asistente de atención al cliente de RENAV Real Estate Group. Responde en nombre del equipo comercial al lead "${activePanelLead.contacto?.nombre || 'cliente'}". Estado en CRM: "${activePanelLead.estado}", prioridad: "${activePanelLead.prioridad}". Sé profesional, amable y orientado a cerrar la venta. Máximo 2-3 oraciones. Responde siempre en español.`,
+                        },
+                        ...historyForAI,
+                        { role: 'user', content: text },
+                    ],
+                }),
+            });
+
+            if (aiRes.ok) {
+                const aiData = await aiRes.json();
+                const aiText = aiData.choices?.[0]?.message?.content?.trim() || 'Gracias por contactarnos, con gusto le atendemos.';
+
+                await fetch('/api/mensajes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_lead: activePanelLead.id_lead,
+                        es_entrante: false,
+                        canal: 'AI',
+                        texto: aiText,
+                    }),
+                });
+
+                const r2 = await fetch(`/api/leads/${activePanelLead.id_lead}`);
+                if (r2.ok) {
+                    const rData = await r2.json();
+                    setActivePanelLead(prev => ({ ...prev, ...rData }));
+                }
+            }
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setSimSubmitting(false);
+            setAiLoading(false);
         }
     };
 
@@ -1097,6 +1237,20 @@ export default function Leads() {
                         {/* Chat */}
                         {panelTab === 'chat' && (
                             <div className="h-full flex flex-col">
+                                {/* AI banner */}
+                                <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-violet-50 border-b border-violet-100 shrink-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-violet-500" />
+                                        <span className="text-[11px] text-violet-700 font-medium">IA activa — simula respuestas del cliente</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowSimModal(true)}
+                                        className="text-[10px] font-semibold text-violet-600 hover:text-violet-800 border border-violet-200 rounded-full px-2 py-0.5 bg-white hover:bg-violet-50 transition-colors whitespace-nowrap"
+                                    >
+                                        + Simular mensaje
+                                    </button>
+                                </div>
+
                                 <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 bg-[#fcfcfc]">
                                     {chatMessages.length === 0 ? (
                                         <div className="text-center text-gray-400 text-[12px] p-6 mt-10">
@@ -1106,13 +1260,38 @@ export default function Leads() {
                                     ) : chatMessages.map((msg, i) => (
                                         <div key={i} className={`flex flex-col gap-1 max-w-[85%] ${msg.from === 'agent' ? 'self-end items-end' : 'self-start items-start'}`}>
                                             <div className={`p-2.5 px-3.5 rounded-2xl text-[13px] leading-snug border shadow-sm
-                                                ${msg.from === 'agent' ? 'bg-[#1a1a2e] text-white border-transparent rounded-br-none' : 'bg-white border-gray-200 text-gray-800 rounded-bl-none'}`}>
+                                                ${msg.from === 'agent'
+                                                    ? msg.isAI
+                                                        ? 'bg-violet-600 text-white border-transparent rounded-br-none'
+                                                        : 'bg-[#1a1a2e] text-white border-transparent rounded-br-none'
+                                                    : 'bg-white border-gray-200 text-gray-800 rounded-bl-none'}`}>
                                                 {msg.text}
                                             </div>
-                                            <div className="text-[10px] text-gray-400 px-1">{msg.from === 'agent' ? 'Tú' : 'Lead'} • {msg.time}</div>
+                                            <div className="flex items-center gap-1 text-[10px] text-gray-400 px-1">
+                                                {msg.from === 'agent'
+                                                    ? msg.isAI
+                                                        ? <><Bot className="w-3 h-3 text-violet-400" /><span className="text-violet-500 font-medium">IA</span></>
+                                                        : 'Tú'
+                                                    : 'Lead'}
+                                                {' '}• {msg.time}
+                                            </div>
                                         </div>
                                     ))}
+
+                                    {/* AI typing indicator */}
+                                    {aiLoading && (
+                                        <div className="self-start flex flex-col gap-1 max-w-[85%]">
+                                            <div className="px-4 py-3 bg-violet-50 border border-violet-200 rounded-2xl rounded-bl-none flex items-center gap-2">
+                                                <Loader2 className="w-3.5 h-3.5 text-violet-500 animate-spin" />
+                                                <span className="text-[12px] text-violet-600">Generando respuesta...</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-[10px] text-violet-400 px-1">
+                                                <Bot className="w-3 h-3" /> IA
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+
                                 <div className="border-t border-gray-200 p-3 bg-white shrink-0">
                                     <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
                                         {MOCK_SUGGESTS.map(s => (
@@ -1128,10 +1307,17 @@ export default function Leads() {
                                             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
                                             placeholder="Redactar mensaje..."
                                             rows={1}
-                                            className="flex-1 p-2.5 min-h-[40px] max-h-[80px] bg-gray-50 text-[13px] border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-gray-300"
+                                            disabled={aiLoading}
+                                            className="flex-1 p-2.5 min-h-[40px] max-h-[80px] bg-gray-50 text-[13px] border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-gray-300 disabled:opacity-50"
                                         />
-                                        <button onClick={handleChatSend} className="bg-[#1a1a2e] text-white p-2.5 rounded-lg hover:bg-[#16213e] transition-colors shrink-0">
-                                            <Send className="w-4 h-4" />
+                                        <button
+                                            onClick={handleChatSend}
+                                            disabled={aiLoading || !chatInput.trim()}
+                                            className="bg-[#1a1a2e] text-white p-2.5 rounded-lg hover:bg-[#16213e] transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                                        >
+                                            {aiLoading
+                                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                                : <Send className="w-4 h-4" />}
                                         </button>
                                     </div>
                                 </div>
@@ -1324,6 +1510,72 @@ export default function Leads() {
                         onAssign={() => alert('Función de asignación masiva próximamente')}
                         onChangeStatus={() => setShowBulkStatusMenu(v => !v)}
                     />
+                </div>
+            )}
+
+            {/* ── Simulate Client Message Modal ────────────────────────────── */}
+            {showSimModal && activePanelLead && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-[15px] font-semibold text-gray-900">Simular mensaje del cliente</h3>
+                                <p className="text-[12px] text-gray-500 mt-0.5">
+                                    Escribe como si fueras <span className="font-medium text-gray-700">{activePanelLead.contacto?.nombre || 'el lead'}</span>
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => { setShowSimModal(false); setSimInput(''); }}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-5">
+                            {/* Lead avatar context */}
+                            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 text-indigo-700 flex items-center justify-center text-[11px] font-bold border border-indigo-200/50 shrink-0">
+                                    {activePanelLead.contacto?.nombre?.substring(0, 2).toUpperCase() || 'LD'}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-[13px] font-medium text-gray-900 truncate">{activePanelLead.contacto?.nombre || 'Lead'}</div>
+                                    <div className="text-[11px] text-gray-500">Mensaje entrante simulado</div>
+                                </div>
+                            </div>
+
+                            <textarea
+                                autoFocus
+                                value={simInput}
+                                onChange={e => setSimInput(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSimSubmit(); } }}
+                                placeholder="Escribe aquí el mensaje del cliente..."
+                                rows={4}
+                                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-[13px] text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 resize-none bg-gray-50 focus:bg-white transition-colors"
+                            />
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50/50">
+                            <button
+                                onClick={() => { setShowSimModal(false); setSimInput(''); }}
+                                className="px-4 py-2 text-[13px] text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleSimSubmit}
+                                disabled={simSubmitting || !simInput.trim()}
+                                className="px-5 py-2 text-[13px] font-medium bg-[#1a1a2e] text-white rounded-lg hover:bg-[#16213e] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {simSubmitting
+                                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Enviando...</>
+                                    : <><MessageSquare className="w-3.5 h-3.5" /> Enviar como cliente</>}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 

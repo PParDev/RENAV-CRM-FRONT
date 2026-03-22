@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 
 // ─── OpenRouter AI config ──────────────────────────────────────────────────
 // NOTE: move this to an env variable (VITE_OPENROUTER_KEY) before production
-const OPENROUTER_KEY = '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';
+const OPENROUTER_KEY = import.meta.env.VITE_OPENROUTER_KEY;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard, Users, Contact, Home, Zap,
     UserCircle, FileText, CheckSquare, Calendar,
-    Phone, Mail, LayoutTemplate, ChevronRight, Bell, Menu, LogOut
+    Phone, Mail, LayoutTemplate, ChevronRight, Bell, Menu, LogOut, Database
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { removeToken } from '../utils/auth.js';
@@ -14,6 +14,7 @@ const menuItems = [
     { name: 'Leads', label: 'Leads', to: '/leads', icon: Users },
     { name: 'Contacts', label: 'Contactos', to: '/contacts', icon: Contact },
     { name: 'Properties', label: 'Propiedades', to: '/properties', icon: Home },
+    { name: 'Catalogs',   label: 'Catálogos',   to: '/catalogs',   icon: Database },
     { name: 'Opportunities', label: 'Oportunidades', to: '/opportunities', icon: Zap },
     { name: 'Account', label: 'Cuenta', to: '/account', icon: UserCircle },
     { name: 'Invoices', label: 'Expediente', to: '/invoices', icon: FileText },
